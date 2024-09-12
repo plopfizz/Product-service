@@ -1,120 +1,168 @@
 
+# Product and Category Microservices API
 
-# Product Microservice
+This API allows users to manage products, categories, and product reviews.
 
-## Overview
+## Authentication & Authorization
 
-The Product Microservice provides RESTful APIs for managing products in an e-commerce platform. It supports basic CRUD operations and allows access control based on user roles. This service is secured using Spring Security, and different endpoints have specific access permissions.
+- **USER** and **ADMIN** roles are supported.
+- Certain operations (like creating, updating, and deleting products or categories) are restricted to **ADMIN** role only.
+- JWT-based authentication is assumed for securing the endpoints.
 
-## Endpoints
+---
 
-### 1. Create Product
+## Product Endpoints
 
-**Endpoint:** `POST /products`
+### 1. Create a Product
+- **URL**: `/products`
+- **Method**: `POST`
+- **Roles**: `ADMIN`
+- **Description**: Create a new product.
+- **Request Body**:
+  ```json
+  {
+    "name": "Product Name",
+    "description": "Product Description",
+    "price": 100,
+    "category": { "id": "category-id", "name": "Category Name" },
+    "attributes": ["color", "size"],
+    "imageUrls": ["image1.jpg", "image2.jpg"]
+  }
 
-**Description:** Creates a new product.
 
-**Request Body:**
+---
 
-```json
-{
-  "id": "string",
-  "name": "string",
-  "category": "string",
-  "price": "number",
-  "description": "string"
-}
-```
+### 2. Update a Product
+- **URL**: `/products/{id}`
+- **Method**: `PUT`
+- **Roles**: `ADMIN`
+- **Description**: Update a product by ID.
+- **Request Body**: Same as the create product request.
+- **Response**: Returns the updated product.
 
-**Permissions:** Requires `ADMIN` role.
+---
 
-**Responses:**
+### 3. Delete a Product
+- **URL**: `/products/{id}`
+- **Method**: `DELETE`
+- **Roles**: `ADMIN`
+- **Description**: Deletes a product by ID.
+- **Response**: No content.
 
-- `200 OK` - Returns the created product.
+---
 
-### 2. Update Product
+### 4. Get All Products
+- **URL**: `/products`
+- **Method**: `GET`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Retrieves all products with optional filters for category or search.
+- **Query Parameters**:
+  - `category` (optional): Filter by category.
+  - `search` (optional): Search by product name.
+- **Response**: Returns a list of products.
 
-**Endpoint:** `PUT /products/{id}`
+---
 
-**Description:** Updates an existing product by its ID.
+### 5. Get a Product by ID
+- **URL**: `/products/{id}`
+- **Method**: `GET`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Get a product by its ID.
+- **Response**: Returns the product details.
 
-**Path Variable:**
+---
 
-- `id` (string) - The ID of the product to be updated.
+### 6. Search Products by Name
+- **URL**: `/products/search`
+- **Method**: `GET`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Search for products by name.
+- **Query Parameters**:
+  - `name`: The product name to search for.
+- **Response**: Returns a list of matching products.
 
-**Request Body:**
+---
 
-```json
-{
-  "name": "string",
-  "category": "string",
-  "price": "number",
-  "description": "string"
-}
-```
+### 7. Filter Products by Category
+- **URL**: `/products/category/{categoryId}`
+- **Method**: `GET`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Filters products based on a category ID.
+- **Response**: Returns a list of products for the specified category.
 
-**Permissions:** Requires `ADMIN` role.
+---
 
-**Responses:**
+### 8. Get Reviews for a Product
+- **URL**: `/products/{productId}/reviews`
+- **Method**: `GET`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Get all reviews for a specific product.
+- **Response**: Returns a list of reviews for the specified product.
 
-- `200 OK` - Returns the updated product.
+---
 
-### 3. Delete Product
+### 9. Add a Review for a Product
+- **URL**: `/products/{productId}/reviews`
+- **Method**: `POST`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Add a review to a product.
+- **Request Body**:
+  ```json
+  {
+    "reviewerName": "John Doe",
+    "comment": "Great product!",
+    "rating": 5
+  }
+  ```
+- **Response**: Returns the added review.
 
-**Endpoint:** `DELETE /products/{id}`
+---
 
-**Description:** Deletes a product by its ID.
+## Category Endpoints
 
-**Path Variable:**
+### 1. Create a Category
+- **URL**: `/api/categories`
+- **Method**: `POST`
+- **Roles**: `ADMIN`
+- **Description**: Create a new category.
+- **Request Body**:
+  ```json
+  {
+    "name": "Category Name"
+  }
+  ```
+- **Response**: Returns the created category.
 
-- `id` (string) - The ID of the product to be deleted.
+---
 
-**Permissions:** Requires `ADMIN` role.
+### 2. Update a Category
+- **URL**: `/api/categories/{id}`
+- **Method**: `PUT`
+- **Roles**: `ADMIN`
+- **Description**: Update a category by ID.
+- **Request Body**: Same as the create category request.
+- **Response**: Returns the updated category.
 
-**Responses:**
+---
 
-- `204 No Content` - Successfully deleted the product.
+### 3. Delete a Category
+- **URL**: `/api/categories/{id}`
+- **Method**: `DELETE`
+- **Roles**: `ADMIN`
+- **Description**: Delete a category by ID.
+- **Response**: No content.
 
-### 4. Get Products
+---
 
-**Endpoint:** `GET /products`
+### 4. Get All Categories
+- **URL**: `/api/categories`
+- **Method**: `GET`
+- **Roles**: `USER`, `ADMIN`
+- **Description**: Retrieve all categories.
+- **Response**: Returns a list of categories.
 
-**Description:** Retrieves a list of products with optional filtering by category and search term.
+---
 
-**Query Parameters:**
-
-- `category` (optional) - The category to filter products by.
-- `search` (optional) - A search term to filter products by name or description.
-
-**Permissions:** Requires `USER` or `ADMIN` role.
-
-**Responses:**
-
-- `200 OK` - Returns a list of products matching the criteria.
-
-## Security
-
-All endpoints are secured with Spring Security:
-
-- **Create, Update, Delete**: Accessible only to users with the `ADMIN` role.
-- **Get Products**: Accessible to users with `USER` or `ADMIN` roles.
-
-## Configuration
-
-Ensure that your security configuration is set up to allow access to the relevant endpoints based on user roles. Example configuration might look like:
-
-```java
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf().disable()
-        .authorizeRequests()
-        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-        .requestMatchers("/products/**").hasRole("USER")
-        .anyRequest().authenticated()
-        .and()
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-}
-```
-
+## Notes
+- Ensure to pass the `Authorization` header with a valid JWT token for endpoints requiring authentication.
+- Role-based access control is applied for secured endpoints. Ensure the appropriate role is assigned to the user before performing the actions.
