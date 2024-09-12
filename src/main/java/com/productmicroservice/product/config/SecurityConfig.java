@@ -22,7 +22,7 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .requestMatchers("/products/**").hasRole("ADMIN")
+                .requestMatchers("/products/**").hasRole("ADMIN" )
                 .anyRequest().authenticated()  // permit requests
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
