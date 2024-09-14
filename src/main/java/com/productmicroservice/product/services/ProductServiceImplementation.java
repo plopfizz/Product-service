@@ -1,13 +1,19 @@
 package com.productmicroservice.product.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.productmicroservice.product.Dto.ProductEvent;
 import com.productmicroservice.product.collection.Product;
 import com.productmicroservice.product.collection.Review;
 import com.productmicroservice.product.repositories.CategoryRepository;
 import com.productmicroservice.product.repositories.ProductRepository;
 import com.productmicroservice.product.repositories.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,13 +29,32 @@ public class ProductServiceImplementation implements ProductService {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    @Autowired
+    public KafkaTemplate<String, Object> kafkaTemplate;
+    private static final String TOPIC = "product_events";
+
 
 
     @Override
     public Product createProduct(Product product) {
-        categoryRepository.findById(product.getCategory().getId()).orElseThrow(() ->
-                new RuntimeException("Category not found"));
-        return productRepository.save(product);
+        boolean productExists = productRepository.findByNameContainingIgnoreCase(product.getName())
+                .stream()
+                .findFirst()
+                .isPresent();
+
+        if (productExists) {
+           return product;
+        }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            categoryRepository.findById(product.getCategory().getId()).orElseThrow(() ->
+                    new RuntimeException("Category not found"));
+            Product savedProduct = productRepository.save(product);
+
+            JsonNode jsonNode = objectMapper.valueToTree(new ProductEvent("CREATE", savedProduct.getId()));
+            kafkaTemplate.send(TOPIC, jsonNode);
+            return savedProduct;
+
 
     }
 
@@ -45,6 +70,9 @@ public class ProductServiceImplementation implements ProductService {
     public void deleteProduct(String id) {
         if (productRepository.existsById(id)) {
             productRepository.deleteById(id);
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.valueToTree(new ProductEvent("DELETE", id));
+            kafkaTemplate.send(TOPIC, jsonNode);
         }
     }
 
